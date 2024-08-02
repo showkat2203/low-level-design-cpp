@@ -30,3 +30,6 @@ cache.put(3, "three");
 cache.put(1, "one");
 cache.put(2, "two"); // Should evict '1' because it is the smallest key
 cache.printCache();
+
+
+#### Amazon Interview Question
