@@ -78,6 +78,51 @@ public:
      }
 };
 
+// TTL-enabled Storage
+template<typename T, typename V>
+class TTLHashMapStorage : public IStorage<T, V> {
+private:
+    unordered_map<T, pair<V, time_point<steady_clock>>> data; // Pair of value and expiration time
+    milliseconds ttl; // Default TTL for all keys
+
+public:
+    // Constructor with TTL
+    TTLHashMapStorage(milliseconds _ttl) : ttl(_ttl) {}
+
+    void add(const T& key, const V& val) override {
+        data[key] = { val, steady_clock::now() + ttl };
+    }
+
+    V get(const T& key) override {
+        if (!exists(key)) {
+            throw runtime_error("Key not found in TTL HashMap Cache");
+        }
+        return data[key].first;
+    }
+
+    void remove(const T& key) override {
+        data.erase(key);
+    }
+
+    bool exists(const T& key) override {
+        auto it = data.find(key);
+        if (it == data.end()) return false;
+
+        // Check if key has expired
+        if (steady_clock::now() > it->second.second) {
+            data.erase(it);  // Remove expired key
+            return false;
+        }
+
+        return true;
+    }
+
+    size_t size() const override {
+        return data.size();
+    }
+};
+
+
 
 template<typename T, typename V>
 class Cache{
